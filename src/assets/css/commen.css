@@ -1,0 +1,39 @@
+.topp {
+  height: 46px;
+  line-height: 47px;
+  background: #ef8201;
+  position: fixed;
+  width: 100%;
+  z-index: 999;
+  top: 0;
+  left: 0;
+}
+
+.topp-back {
+  width: 8px;
+  height: 16px;
+  background-image: url(../../assets/images/arrow-left.png);
+  background-size: 100% 100%;
+  position: absolute;
+  left: 19px;
+  top: 14px;
+}
+
+.topp-title {
+  font-size: 16px;
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mine {
+  position: absolute;
+  right: 19px;
+  top: 14px;
+  width: 18px;
+  height: 18px;
+  background-image: url(../../assets/images/mine-white.png);
+  background-size: 100% 100%;
+}
