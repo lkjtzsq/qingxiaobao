@@ -9,14 +9,10 @@
     <el-date-picker v-model="value1" type="date" placeholder="选择日期" :picker-options="pickerOptions" :editable="false" :clearable="false">
     </el-date-picker>
   </div>
-  <div class="block">
-    <el-time-picker :is-range="true" v-model="value3" range-separator="至" start-placeholder="开始时间" end-placeholder="结束时间" placeholder="选择时间范围" value-format="hh:mm:ss" :picker-options="pickerChose">
-    </el-time-picker>
-  </div>
   <div class="toggle">
     <el-tabs v-model="activeName" @tab-click="handleClick" :stretch="true">
       <el-tab-pane label="东湖" name="first">
-        <div class="meeting-item" v-for="item in dongHuList" :dataId="item.id">
+        <div class="meeting-item" v-for="item in dongHuList" :dataId="item.id" @click="openTime(item.books)">
           <div class="meeting-room">
             <div class="meeting-left">
               <h1 class="meeting-title">{{item.name}}</h1>
@@ -34,7 +30,7 @@
         </div>
       </el-tab-pane>
       <el-tab-pane label="西海" name="second">
-        <div class="meeting-item" v-for="item in xiHaiList" :dataId="item.id">
+        <div class="meeting-item" v-for="item in xiHaiList">
           <div class="meeting-room">
             <div class="meeting-left">
               <h1 class="meeting-title">{{item.name}}</h1>
@@ -53,6 +49,24 @@
       </el-tab-pane>
     </el-tabs>
   </div>
+  <div class="timePanel" v-if="show">
+    <div class="timeHead">
+      <p></p>
+      <p></p>
+      <p></p>
+      <p><input type="text" placeholder="请输入会议主题..." /></p>
+    </div>
+    <div class="timeBox">
+      <div class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
+        <el-checkbox v-model="item.checked" :disabled="item.chose=='1'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">{{selectableRange[index]}}</el-checkbox>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+    <div class="submitBox">
+      <input type="button" name="" value="立即预定">
+    </div>
+  </div>
 </div>
 </template>
 
@@ -60,20 +74,54 @@
 export default {
   data() {
     return {
+      startIndex: null,
+      endIndex: null,
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() < Date.now() - 24 * 60 * 60 * 1000;
         }
       },
-      pickerChose:{
-        format:"hh-mm"
-      },
+      show: false,
       value1: '',
       activeName: 'first',
       dongHuList: [],
       xiHaiList: [],
-      value3: [new Date(2016, 9, 10, 8, 40), new Date(2016, 9, 10, 9, 40)],
-      value4: [new Date(2016, 9, 10, 8, 40), new Date(2016, 9, 10, 9, 40)]
+      timeList: [],
+      checked: false,
+      selectableRange: [
+        "07:00-07:30",
+        "07:30-08:00",
+        "08:00-08:30",
+        "08:30-09:00",
+        "09:00-09:30",
+        "09:30-10:00",
+        "10:00-10:30",
+        "10:30-11:00",
+        "11:00-11:30",
+        "11:30-12:00",
+        "12:00-12:30",
+        "12:30-13:00",
+        "13:00-13:30",
+        "13:30-14:00",
+        "14:00-14:30",
+        "14:30-15:00",
+        "15:00-15:30",
+        "15:30-16:00",
+        "16:00-16:30",
+        "16:30-17:00",
+        "17:00-17:30",
+        "17:30-18:00",
+        "18:00-18:30",
+        "18:30-19:00",
+        "19:00-19:30",
+        "19:30-20:00",
+        "20:00-20:30",
+        "20:30-21:00",
+        "21:00-21:30",
+        "21:30-22:00",
+        "22:00-22:30",
+        "22:30-23:00"
+      ]
     }
   },
   created() {
@@ -81,6 +129,43 @@ export default {
     this.getList()
   },
   methods: {
+    chose(index) {
+      let that = this
+      console.log("chose")
+      console.log(this.startIndex)
+      console.log(index)
+      if (this.startIndex == null) {
+        this.startIndex = index
+        this.endIndex = index
+      } else {
+        if (index < this.startIndex) {
+          this.startIndex = index
+        } else if (index > this.endIndex) {
+          this.endIndex = index
+        }
+      }
+    },
+    quitChose(index) {
+      if (index == this.startIndex) {
+        this.startIndex += 1
+      } else if (index == this.endIndex) {
+        this.endIndex -= 1
+      }
+    },
+    openTime(books) {
+      let that = this
+      console.log(books)
+      this.show = !this.show
+      books.forEach(function(item, index) {
+        console.log(item)
+        that.timeList.push({
+          chose: item,
+          index: index,
+          checked: false
+        })
+      })
+      console.log(this.timeList)
+    },
     getList() {
       this.axios.post("/api/api/meeting", {
         date: this.value1,
@@ -395,5 +480,19 @@ export default {
 
 .gray {
   background: rgb(170, 170, 170);
+}
+
+>>>.el-time-range-picker {
+  width: 100%;
+}
+
+.timePanel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  background: #fff;
+  width: 100%;
+  height: 100%;
 }
 </style>

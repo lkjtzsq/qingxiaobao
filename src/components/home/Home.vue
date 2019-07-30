@@ -25,7 +25,7 @@ export default {
       if (this.timer) {
         clearInterval(this.timer)
       }
-      // this.$router.push('/main')
+      this.$router.push('/main')
     },
     toLogin() {
       let _this = this
@@ -37,7 +37,7 @@ export default {
           if (this.seconds == 0) {
             clearInterval(this.timer)
             setTimeout(() => {
-              // _this.$router.push('/main')
+              _this.$router.push('/main')
             }, 1000)
           }
       }, 1000)
