@@ -6,7 +6,7 @@
     <span class="mine"></span>
   </div>
   <div class="block">
-    <el-date-picker v-model="value1" type="date" placeholder="选择日期" :picker-options="pickerOptions" :editable="false" :clearable="false">
+    <el-date-picker v-model="value1" type="date" placeholder="选择日期" :picker-options="pickerOptions" :editable="false" :clearable="false" value-format="yyyy-MM-dd" @focus="dateFocus()" @change="dateFocus()">
     </el-date-picker>
   </div>
   <div class="toggle">
@@ -58,7 +58,13 @@
     </div>
     <div class="timeBox">
       <div class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
-        <el-checkbox v-model="item.checked" :disabled="item.chose=='1'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">{{selectableRange[index]}}</el-checkbox>
+        <el-checkbox v-model="item.checked" :disabled="item.chose!='0'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">
+          <p>
+            {{selectableRange[index]}}
+            <i v-if="item.outTime">已过期</i>
+            <i v-if="!item.outTime && item.chose!=0">已被{{item.chose}}预定</i>
+          </p>
+        </el-checkbox>
         <span></span>
         <span></span>
       </div>
@@ -67,15 +73,18 @@
       <input type="button" name="" value="立即预定">
     </div>
   </div>
+  <div class="datePickerBg" v-if="bgShow" @click="bgShow=!bgShow" @touchmove.prevent.stop></div>
 </div>
 </template>
 
 <script>
+import $ from 'jquery'
 export default {
   data() {
     return {
       startIndex: null,
       endIndex: null,
+      bgShow: false,
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() < Date.now() - 24 * 60 * 60 * 1000;
@@ -83,6 +92,7 @@ export default {
       },
       show: false,
       value1: '',
+      hasChosed: false,
       activeName: 'first',
       dongHuList: [],
       xiHaiList: [],
@@ -129,11 +139,11 @@ export default {
     this.getList()
   },
   methods: {
+    dateFocus(){
+      this.bgShow=!this.bgShow
+    },
     chose(index) {
       let that = this
-      console.log("chose")
-      console.log(this.startIndex)
-      console.log(index)
       if (this.startIndex == null) {
         this.startIndex = index
         this.endIndex = index
@@ -143,37 +153,83 @@ export default {
         } else if (index > this.endIndex) {
           this.endIndex = index
         }
+        this.timeList.some((item, dot) => {
+          if (dot > that.startIndex && dot < that.endIndex) {
+            this.timeList[dot].checked = true;
+          }
+        })
       }
     },
     quitChose(index) {
+      let that = this
       if (index == this.startIndex) {
         this.startIndex += 1
       } else if (index == this.endIndex) {
         this.endIndex -= 1
       }
+      let step = Math.ceil((this.endIndex - this.startIndex) / 2)
+      console.log(step)
+      if (index < step + this.startIndex) {
+
+        this.timeList.some((item, dot) => {
+          if (dot >= that.startIndex && dot < index) {
+            this.timeList[dot].checked = false;
+          }
+        })
+        this.startIndex = index + 1
+      } else {
+        this.timeList.some((item, dot) => {
+          if (dot > index && dot <= that.endIndex) {
+            this.timeList[dot].checked = false;
+          }
+        })
+        this.endIndex = index - 1
+      }
+
     },
     openTime(books) {
       let that = this
-      console.log(books)
       this.show = !this.show
+      let currentTime = new Date().getTime()
       books.forEach(function(item, index) {
-        console.log(item)
-        that.timeList.push({
-          chose: item,
-          index: index,
-          checked: false
-        })
+        let iTime = that.value1 + " " + that.selectableRange[index].split('-')[1] + ":00"
+        let outTime = ""
+        iTime = new Date(iTime).getTime()
+        if (iTime < currentTime) {
+          outTime = true
+          that.timeList.push({
+            chose: "已过期",
+            index: index,
+            checked: true,
+            outTime: outTime
+          })
+        } else {
+          outTime = false
+          if (item != "0") {
+            that.timeList.push({
+              chose: item,
+              index: index,
+              checked: true,
+              outTime: outTime
+            })
+          } else {
+            that.timeList.push({
+              chose: item,
+              index: index,
+              checked: false,
+              outTime: outTime
+            })
+          }
+        }
+
       })
-      console.log(this.timeList)
     },
     getList() {
       this.axios.post("/api/api/meeting", {
         date: this.value1,
         token: "29d216fab87b6eb6f0fe8fe18658b00f"
       }).then(data => {
-        console.log(data.data.data.data)
         data.data.data.data.forEach((item, index) => {
-          console.log(item)
           if (item.region == 1) {
             this.dongHuList.push(item)
           } else {
@@ -494,5 +550,16 @@ export default {
   background: #fff;
   width: 100%;
   height: 100%;
+}
+
+.datePickerBg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: #000;
+  opacity: .5;
+  z-index: 1500;
 }
 </style>
