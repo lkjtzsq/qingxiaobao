@@ -12,7 +12,7 @@
   <div class="toggle">
     <el-tabs v-model="activeName" @tab-click="handleClick" :stretch="true">
       <el-tab-pane label="东湖" name="first">
-        <div class="meeting-item" v-for="item in dongHuList" :dataId="item.id" @click="openTime(item.books)">
+        <div class="meeting-item" v-for="item in dongHuList" :dataId="item.id" @click="openTime(item.books,item.name,item.devices,item.pnumber)">
           <div class="meeting-room">
             <div class="meeting-left">
               <h1 class="meeting-title">{{item.name}}</h1>
@@ -51,9 +51,9 @@
   </div>
   <div class="timePanel" v-if="show">
     <div class="timeHead">
-      <p></p>
-      <p></p>
-      <p></p>
+      <p>{{name}}</p>
+      <p>{{devices}}</p>
+      <p>最多容纳{{pnumber}}人</p>
       <p><input type="text" placeholder="请输入会议主题..." /></p>
     </div>
     <div class="timeBox">
@@ -82,6 +82,9 @@ import $ from 'jquery'
 export default {
   data() {
     return {
+      name: "",
+      devices: "",
+      pnumber: "",
       startIndex: null,
       endIndex: null,
       bgShow: false,
@@ -139,8 +142,8 @@ export default {
     this.getList()
   },
   methods: {
-    dateFocus(){
-      this.bgShow=!this.bgShow
+    dateFocus() {
+      this.bgShow = !this.bgShow
     },
     chose(index) {
       let that = this
@@ -187,9 +190,12 @@ export default {
       }
 
     },
-    openTime(books) {
+    openTime(books, name, devices, pnumber) {
       let that = this
       this.show = !this.show
+      this.name = name
+      this.devices = devices
+      this.pnumber = pnumber
       let currentTime = new Date().getTime()
       books.forEach(function(item, index) {
         let iTime = that.value1 + " " + that.selectableRange[index].split('-')[1] + ":00"
@@ -264,10 +270,12 @@ export default {
 <style scoped>
 .main {
   padding-top: 46px;
+  background: #f2f2f2;
 }
 
 .block {
-  margin: 15px;
+  padding: 15px;
+  background: #fff;
 }
 
 .el-date-editor.el-input,
@@ -276,11 +284,10 @@ export default {
 }
 
 .meeting-item {
-  margin: 0 10px 20px 10px;
+  margin-bottom: 10px;
   overflow: hidden;
-  background: #f7f7f7;
+  background: #fff;
   padding: 10px;
-  box-shadow: 0px 3px 10px 0px #ccc;
 }
 
 .txt-center {
@@ -293,17 +300,19 @@ export default {
 
 .meeting-left {
   flex: 1;
+  height: 60px;
 }
 
 .meeting-right {
-  width: 135px;
-  height: 107px;
+  width: 80px;
+  height: 60px;
   float: right;
 }
 
 .meeting-right img {
   width: 100%;
   height: 100%;
+  border-radius: 5px;
 }
 
 
@@ -331,20 +340,24 @@ export default {
 
 
 .meeting-title {
-  font-size: 16px;
-  margin-bottom: 8px;
-  color: #57b83e;
+  font-size: 15px;
+  margin-bottom: 10px;
+  color: #333;
 }
 
 .meeting-cr {
   color: #a1a1a1;
   font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.meeting-cr:last-child {
+  margin: 0;
 }
 
 .progress-bar {
-  height: 10px;
+  height: 13px;
   margin: 10px 0 5px;
-  width: 99%;
   border: 1px solid #ccc;
   overflow: hidden;
 }
@@ -561,5 +574,10 @@ export default {
   background: #000;
   opacity: .5;
   z-index: 1500;
+}
+
+>>>.el-tabs__header {
+  background: #fff;
+  margin: 0 0 10px;
 }
 </style>
