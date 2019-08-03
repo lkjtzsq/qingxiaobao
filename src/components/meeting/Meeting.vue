@@ -17,20 +17,22 @@
             <div class="meeting-left">
               <h1 class="meeting-title">{{item.name}}</h1>
               <p class="meeting-cr p1">{{item.devices}}</p>
-              <p class="meeting-cr p2">{{item.pnumber}}人</p>
-              <p class="meeting-cr p3">{{item.address}}</p>
+              <p class="meeting-cr p2"><span class="pnumber">{{item.pnumber}}</span>人<span class="address">{{item.address}}</span></p>
             </div>
-            <div class="meeting-right"><img :src="item.thumbnail[0]"></div>
+            <div class="meeting-right"><img :src="item.thumbnail[0]" @click.stop="slideImageShow=!slideImageShow;slideImage=item.thumbnail[0]"></div>
           </div>
           <div class="meeting-progress">
             <div class="progress-bar">
-              <span v-for="span in item.books" :class="{gray:span==1?true:false}"></span>
+              <span v-for="span in item.books" :class="gray(span)"></span>
+            </div>
+            <div class="progress-count">
+              <span v-for="item in progressCount">{{item}}</span>
             </div>
           </div>
         </div>
       </el-tab-pane>
       <el-tab-pane label="西海" name="second">
-        <div class="meeting-item" v-for="item in xiHaiList">
+        <div class="meeting-item" v-for="item in xiHaiList" :dataId="item.id" @click="openTime(item.books,item.name,item.devices,item.pnumber)">
           <div class="meeting-room">
             <div class="meeting-left">
               <h1 class="meeting-title">{{item.name}}</h1>
@@ -42,7 +44,10 @@
           </div>
           <div class="meeting-progress">
             <div class="progress-bar">
-              <span v-for="span in item.books" :class="{gray:span==1?true:false}"></span>
+              <span v-for="span in item.books" :class="gray(span)"></span>
+            </div>
+            <div class="progress-count">
+              <span v-for="item in progressCount">{{item}}</span>
             </div>
           </div>
         </div>
@@ -51,6 +56,7 @@
   </div>
   <div class="timePanel" v-if="show">
     <div class="timeHead">
+      <i class="close" @click="show=!show"></i>
       <p>{{name}}</p>
       <p>{{devices}}</p>
       <p>最多容纳{{pnumber}}人</p>
@@ -74,6 +80,9 @@
     </div>
   </div>
   <div class="datePickerBg" v-if="bgShow" @click="bgShow=!bgShow" @touchmove.prevent.stop></div>
+  <div class="slideImage" v-if="slideImageShow" @click="slideImageShow=!slideImageShow">
+    <img :src="slideImage"/>
+  </div>
 </div>
 </template>
 
@@ -82,6 +91,8 @@ import $ from 'jquery'
 export default {
   data() {
     return {
+      slideImage:"",
+      slideImageShow:false,
       name: "",
       devices: "",
       pnumber: "",
@@ -134,12 +145,35 @@ export default {
         "21:30-22:00",
         "22:00-22:30",
         "22:30-23:00"
-      ]
+      ],
+      progressCount:[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
     }
   },
   created() {
     this.currentDate()
     this.getList()
+  },
+  watch:{
+    checked(val){
+      if(val==true){
+        console.log(val)
+        this.timeList.forEach((item,index)=>{
+          if(item.chose=="0"){
+            this.timeList[index].checked=false
+          }
+        })
+        this.checked=false
+      }
+    }
+  },
+  computed:{
+    gray(span){
+      return function(span){
+        if(span!="0"){
+          return "gray"
+        }
+      }
+    }
   },
   methods: {
     dateFocus() {
@@ -158,6 +192,12 @@ export default {
         }
         this.timeList.some((item, dot) => {
           if (dot > that.startIndex && dot < that.endIndex) {
+            if(item.chose!="0"){
+              that.checked=true
+              that.startIndex=null
+              that.endIndex=null
+              return true
+            }
             this.timeList[dot].checked = true;
           }
         })
@@ -190,18 +230,26 @@ export default {
       }
 
     },
+    outTime(index){
+      let currentTime = new Date().getTime()
+      let iTime = this.value1.replace(/\-/g,'/') + " " + this.selectableRange[index].split('-')[1] + ":00"
+      iTime = new Date(iTime).getTime()
+      if (iTime < currentTime){
+        return true
+      }else{
+        return false
+      }
+    },
     openTime(books, name, devices, pnumber) {
+      this.timeList=[]
       let that = this
       this.show = !this.show
       this.name = name
       this.devices = devices
       this.pnumber = pnumber
-      let currentTime = new Date().getTime()
       books.forEach(function(item, index) {
-        let iTime = that.value1 + " " + that.selectableRange[index].split('-')[1] + ":00"
         let outTime = ""
-        iTime = new Date(iTime).getTime()
-        if (iTime < currentTime) {
+        if (that.outTime(index)) {
           outTime = true
           that.timeList.push({
             chose: "已过期",
@@ -231,11 +279,17 @@ export default {
       })
     },
     getList() {
+      let that=this
       this.axios.post("/api/api/meeting", {
         date: this.value1,
         token: "29d216fab87b6eb6f0fe8fe18658b00f"
       }).then(data => {
         data.data.data.data.forEach((item, index) => {
+          item.books.forEach(function(v,i){
+            if(that.outTime(i)){
+              data.data.data.data[index].books[i]="1"
+            }
+          })
           if (item.region == 1) {
             this.dongHuList.push(item)
           } else {
@@ -300,12 +354,12 @@ export default {
 
 .meeting-left {
   flex: 1;
-  height: 60px;
+  height: 64px;
 }
 
 .meeting-right {
-  width: 80px;
-  height: 60px;
+  width: 85px;
+  height: 64px;
   float: right;
 }
 
@@ -340,14 +394,14 @@ export default {
 
 
 .meeting-title {
-  font-size: 15px;
+  font-size: 16px;
   margin-bottom: 10px;
   color: #333;
 }
 
 .meeting-cr {
   color: #a1a1a1;
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 10px;
 }
 
@@ -357,15 +411,15 @@ export default {
 
 .progress-bar {
   height: 13px;
-  margin: 10px 0 5px;
-  border: 1px solid #ccc;
+  margin: 15px 0 5px;
+  border: 1px solid #e5e5e5;
   overflow: hidden;
 }
 
 .progress-bar span {
   float: left;
   width: 3.125%;
-  height: 10px;
+  height: 100%;
 }
 
 .progress-count {
@@ -377,7 +431,7 @@ export default {
 .progress-count span {
   flex: 1;
   font-size: 12px;
-  color: #ef8201;
+  color: #e5e5e5;
 }
 
 .view-pic-bg,
@@ -548,7 +602,7 @@ export default {
 }
 
 .gray {
-  background: rgb(170, 170, 170);
+  background: #e5e5e5;
 }
 
 >>>.el-time-range-picker {
@@ -563,6 +617,9 @@ export default {
   background: #fff;
   width: 100%;
   height: 100%;
+  overflow-y: scroll;
+  padding-top: 65px;
+  box-sizing: border-box;
 }
 
 .datePickerBg {
@@ -579,5 +636,54 @@ export default {
 >>>.el-tabs__header {
   background: #fff;
   margin: 0 0 10px;
+}
+.pnumber{
+  padding-left: 16px;
+  background: url(../../assets/images/people.png) 0 0 no-repeat;
+  background-size: auto 14px;
+}
+.address{
+  padding-left: 16px;
+  background: url(../../assets/images/position.png) 0 0 no-repeat;
+  background-size: auto 14px;
+  margin-left: 5px;
+}
+.slideImage{
+  position: fixed;
+  width: 100%;
+  height:100%;
+  background: #000;
+  top:0;
+  left:0;
+  z-index: 3000;
+  display: flex;
+  align-items: center;
+}
+.slideImage img{
+  width: 100%;
+}
+.timeHead{
+  position: fixed;
+  width: 100%;
+  top:0;
+  z-index: 5000;
+  background: #fff;
+}
+.close{
+  position: absolute;
+  right:20px;
+  top:20px;
+  background: #ccc;
+  width:40px;
+  height:40px;
+}
+.submitBox{
+  position: fixed;
+  bottom:0;
+  z-index: 4000;
+  width: 100%;
+}
+.submitBox input{
+  width: 100%;
 }
 </style>
