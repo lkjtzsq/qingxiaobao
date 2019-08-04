@@ -3,13 +3,18 @@
   <div class="topp">
     <span class="topp-back" @click="$router.push('/main')"></span>
     <div class="topp-title">会议室预约</div>
-    <span class="mine"></span>
+    <span class="mine"
+
+    ></span>
   </div>
   <div class="block">
-    <el-date-picker v-model="value1" type="date" placeholder="选择日期" :picker-options="pickerOptions" :editable="false" :clearable="false" value-format="yyyy-MM-dd" @focus="dateFocus()" @change="dateFocus()">
+    <el-date-picker v-model="value1" type="date" placeholder="选择日期" :picker-options="pickerOptions" :editable="false" :clearable="false" value-format="yyyy-MM-dd" @focus="dateFocus()" @change="dateChange()" :validate-event="false" @touchmove.stop>
     </el-date-picker>
   </div>
   <div class="toggle">
+    <div class="loading-box"  v-if="loadingShow">
+      <svg viewBox="25 25 50 50" class="loading"><circle cx="50" cy="50" r="20" fill="none" class="loading-path"></circle></svg>
+    </div>
     <el-tabs v-model="activeName" @tab-click="handleClick" :stretch="true">
       <el-tab-pane label="东湖" name="first">
         <div class="meeting-item" v-for="item in dongHuList" :dataId="item.id" @click="openTime(item.books,item.name,item.devices,item.pnumber)">
@@ -81,7 +86,7 @@
   </div>
   <div class="datePickerBg" v-if="bgShow" @click="bgShow=!bgShow" @touchmove.prevent.stop></div>
   <div class="slideImage" v-if="slideImageShow" @click="slideImageShow=!slideImageShow">
-    <img :src="slideImage"/>
+    <img :src="slideImage" />
   </div>
 </div>
 </template>
@@ -91,8 +96,9 @@ import $ from 'jquery'
 export default {
   data() {
     return {
-      slideImage:"",
-      slideImageShow:false,
+      loadingShow:true,
+      slideImage: "",
+      slideImageShow: false,
       name: "",
       devices: "",
       pnumber: "",
@@ -146,30 +152,45 @@ export default {
         "22:00-22:30",
         "22:30-23:00"
       ],
-      progressCount:[7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23]
+      progressCount: [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
     }
   },
   created() {
     this.currentDate()
     this.getList()
   },
-  watch:{
-    checked(val){
-      if(val==true){
+  watch: {
+    checked(val) {
+      if (val == true) {
         console.log(val)
-        this.timeList.forEach((item,index)=>{
-          if(item.chose=="0"){
-            this.timeList[index].checked=false
+        this.timeList.forEach((item, index) => {
+          if (item.chose == "0") {
+            this.timeList[index].checked = false
           }
         })
-        this.checked=false
+        this.checked = false
+      }
+    },
+    bgShow(val){
+      if(val==true){
+        $('body').css({
+          height:"100%",
+          "overflow-y":"hidden",
+          position:"absolute"
+        })
+      }else{
+        $('body').css({
+          height:"auto",
+          "overflow-y":"auto",
+          position:"initial"
+        })
       }
     }
   },
-  computed:{
-    gray(span){
-      return function(span){
-        if(span!="0"){
+  computed: {
+    gray(span) {
+      return function(span) {
+        if (span != "0") {
           return "gray"
         }
       }
@@ -178,6 +199,12 @@ export default {
   methods: {
     dateFocus() {
       this.bgShow = !this.bgShow
+    },
+    dateChange() {
+      this.bgShow = !this.bgShow
+      this.dongHuList=[]
+      this.xiHaiList=[]
+      this.getList()
     },
     chose(index) {
       let that = this
@@ -192,10 +219,10 @@ export default {
         }
         this.timeList.some((item, dot) => {
           if (dot > that.startIndex && dot < that.endIndex) {
-            if(item.chose!="0"){
-              that.checked=true
-              that.startIndex=null
-              that.endIndex=null
+            if (item.chose != "0") {
+              that.checked = true
+              that.startIndex = null
+              that.endIndex = null
               return true
             }
             this.timeList[dot].checked = true;
@@ -230,18 +257,18 @@ export default {
       }
 
     },
-    outTime(index){
+    outTime(index) {
       let currentTime = new Date().getTime()
-      let iTime = this.value1.replace(/\-/g,'/') + " " + this.selectableRange[index].split('-')[1] + ":00"
+      let iTime = this.value1.replace(/\-/g, '/') + " " + this.selectableRange[index].split('-')[1] + ":00"
       iTime = new Date(iTime).getTime()
-      if (iTime < currentTime){
+      if (iTime < currentTime) {
         return true
-      }else{
+      } else {
         return false
       }
     },
     openTime(books, name, devices, pnumber) {
-      this.timeList=[]
+      this.timeList = []
       let that = this
       this.show = !this.show
       this.name = name
@@ -279,15 +306,15 @@ export default {
       })
     },
     getList() {
-      let that=this
+      let that = this
       this.axios.post("/api/api/meeting", {
         date: this.value1,
         token: "29d216fab87b6eb6f0fe8fe18658b00f"
       }).then(data => {
         data.data.data.data.forEach((item, index) => {
-          item.books.forEach(function(v,i){
-            if(that.outTime(i)){
-              data.data.data.data[index].books[i]="1"
+          item.books.forEach(function(v, i) {
+            if (that.outTime(i)) {
+              data.data.data.data[index].books[i] = "1"
             }
           })
           if (item.region == 1) {
@@ -296,6 +323,7 @@ export default {
             this.xiHaiList.push(item)
           }
         })
+        // this.loadingShow=!this.loadingShow
       })
     },
     handleClick(tab, event) {
@@ -637,53 +665,83 @@ export default {
   background: #fff;
   margin: 0 0 10px;
 }
-.pnumber{
+
+.pnumber {
   padding-left: 16px;
   background: url(../../assets/images/people.png) 0 0 no-repeat;
   background-size: auto 14px;
 }
-.address{
+
+.address {
   padding-left: 16px;
   background: url(../../assets/images/position.png) 0 0 no-repeat;
   background-size: auto 14px;
   margin-left: 5px;
 }
-.slideImage{
+
+.slideImage {
   position: fixed;
   width: 100%;
-  height:100%;
+  height: 100%;
   background: #000;
-  top:0;
-  left:0;
+  top: 0;
+  left: 0;
   z-index: 3000;
   display: flex;
   align-items: center;
 }
-.slideImage img{
+
+.slideImage img {
   width: 100%;
 }
-.timeHead{
+
+.timeHead {
   position: fixed;
   width: 100%;
-  top:0;
+  top: 0;
   z-index: 5000;
   background: #fff;
 }
-.close{
+
+.close {
   position: absolute;
-  right:20px;
-  top:20px;
+  right: 20px;
+  top: 20px;
   background: #ccc;
-  width:40px;
-  height:40px;
+  width: 40px;
+  height: 40px;
 }
-.submitBox{
+
+.submitBox {
   position: fixed;
-  bottom:0;
+  bottom: 0;
   z-index: 4000;
   width: 100%;
 }
-.submitBox input{
+
+.submitBox input {
   width: 100%;
+}
+.toggle{
+  position: relative;
+}
+.loading-box{
+  text-align: center;
+  position: absolute;
+  top:195px;
+  width: 100%;
+}
+.loading {
+    height: 42px;
+    width: 42px;
+    animation: loading-rotate 2s linear infinite;
+}
+.loading-path {
+    animation: loading-dash 1.5s ease-in-out infinite;
+    stroke-dasharray: 90,150;
+    stroke-dashoffset: 0;
+    stroke-width: 2;
+    stroke: #409eff;
+    stroke-linecap: round;
 }
 </style>
