@@ -3,17 +3,17 @@
   <div class="topp">
     <span class="topp-back" @click="$router.push('/main')"></span>
     <div class="topp-title">会议室预约</div>
-    <span class="mine"
-
-    ></span>
+    <span class="mine"></span>
   </div>
   <div class="block">
     <el-date-picker v-model="value1" type="date" placeholder="选择日期" :picker-options="pickerOptions" :editable="false" :clearable="false" value-format="yyyy-MM-dd" @focus="dateFocus()" @change="dateChange()" :validate-event="false" @touchmove.stop>
     </el-date-picker>
   </div>
   <div class="toggle">
-    <div class="loading-box"  v-if="loadingShow">
-      <svg viewBox="25 25 50 50" class="loading"><circle cx="50" cy="50" r="20" fill="none" class="loading-path"></circle></svg>
+    <div class="loading-box" v-if="loadingShow">
+      <svg viewBox="25 25 50 50" class="loading">
+        <circle cx="50" cy="50" r="20" fill="none" class="loading-path"></circle>
+      </svg>
     </div>
     <el-tabs v-model="activeName" @tab-click="handleClick" :stretch="true">
       <el-tab-pane label="东湖" name="first">
@@ -59,29 +59,33 @@
       </el-tab-pane>
     </el-tabs>
   </div>
-  <div class="timePanel" v-if="show">
+  <div class="timePanel" v-show="show" @touchmove.stop>
     <div class="timeHead">
       <i class="close" @click="show=!show"></i>
-      <p>{{name}}</p>
-      <p>{{devices}}</p>
-      <p>最多容纳{{pnumber}}人</p>
-      <p><input type="text" placeholder="请输入会议主题..." /></p>
+      <h1 class="panel-title">{{name}}</h1>
+      <p class="panel-p">{{devices}}</p>
+      <p class="panel-p">最多容纳{{pnumber}}人</p>
+      <p class="panel-input">
+        <el-input v-model="theme" placeholder="请输入会议主题" resize="none"></el-input>
+      </p>
     </div>
-    <div class="timeBox">
-      <div class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
-        <el-checkbox v-model="item.checked" :disabled="item.chose!='0'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">
-          <p>
-            {{selectableRange[index]}}
-            <i v-if="item.outTime">已过期</i>
-            <i v-if="!item.outTime && item.chose!=0">已被{{item.chose}}预定</i>
-          </p>
-        </el-checkbox>
-        <span></span>
-        <span></span>
+    <div class="timeBox" ref="timeBox">
+      <div class="tbList">
+        <div class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
+          <el-checkbox v-model="item.checked" :disabled="item.chose!='0'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">
+            <p>
+              {{selectableRange[index]}}
+              <i v-if="item.outTime">已过期</i>
+              <i v-if="!item.outTime && item.chose!=0">已被{{item.chose}}预定</i>
+            </p>
+          </el-checkbox>
+          <span></span>
+          <span></span>
+        </div>
       </div>
     </div>
     <div class="submitBox">
-      <input type="button" name="" value="立即预定">
+      <el-button type="primary" disabled>立即预定</el-button>
     </div>
   </div>
   <div class="datePickerBg" v-if="bgShow" @click="bgShow=!bgShow" @touchmove.prevent.stop></div>
@@ -93,10 +97,12 @@
 
 <script>
 import $ from 'jquery'
+import BScroll from 'better-scroll'
 export default {
   data() {
     return {
-      loadingShow:true,
+      theme: "",
+      loadingShow: true,
       slideImage: "",
       slideImageShow: false,
       name: "",
@@ -159,6 +165,11 @@ export default {
     this.currentDate()
     this.getList()
   },
+  mounted() {
+    this.$nextTick(() => {
+      this.scroll = new BScroll(this.$refs.timeBox)
+    })
+  },
   watch: {
     checked(val) {
       if (val == true) {
@@ -171,18 +182,33 @@ export default {
         this.checked = false
       }
     },
-    bgShow(val){
-      if(val==true){
+    bgShow(val) {
+      if (val == true) {
         $('body').css({
-          height:"100%",
-          "overflow-y":"hidden",
-          position:"absolute"
+          height: "100%",
+          "overflow-y": "hidden",
+          position: "absolute"
         })
-      }else{
+      } else {
         $('body').css({
-          height:"auto",
-          "overflow-y":"auto",
-          position:"initial"
+          height: "auto",
+          "overflow-y": "auto",
+          position: "initial"
+        })
+      }
+    },
+    show(val) {
+      if (val == true) {
+        $('body').css({
+          height: "100%",
+          "overflow-y": "hidden",
+          position: "absolute"
+        })
+      } else {
+        $('body').css({
+          height: "auto",
+          "overflow-y": "auto",
+          position: "initial"
         })
       }
     }
@@ -202,8 +228,8 @@ export default {
     },
     dateChange() {
       this.bgShow = !this.bgShow
-      this.dongHuList=[]
-      this.xiHaiList=[]
+      this.dongHuList = []
+      this.xiHaiList = []
       this.getList()
     },
     chose(index) {
@@ -304,6 +330,7 @@ export default {
         }
 
       })
+
     },
     getList() {
       let that = this
@@ -367,9 +394,14 @@ export default {
 
 .meeting-item {
   margin-bottom: 10px;
-  overflow: hidden;
+  overflow-y: scroll;
   background: #fff;
-  padding: 10px;
+  padding: 12px;
+}
+
+.timeBox {
+  height: -webkit-fill-available;
+  overflow: hidden;
 }
 
 .txt-center {
@@ -645,9 +677,10 @@ export default {
   background: #fff;
   width: 100%;
   height: 100%;
-  overflow-y: scroll;
   padding-top: 65px;
   box-sizing: border-box;
+  padding: 139px 0 61px;
+  overflow: hidden;
 }
 
 .datePickerBg {
@@ -697,51 +730,87 @@ export default {
 
 .timeHead {
   position: fixed;
-  width: 100%;
+  width: -webkit-fill-available;
   top: 0;
   z-index: 5000;
   background: #fff;
+  padding: 12px;
+  border-bottom: 1px solid #dcdfe6;
+  height: 114px;
 }
 
 .close {
   position: absolute;
-  right: 20px;
-  top: 20px;
-  background: #ccc;
-  width: 40px;
-  height: 40px;
+  right: 12px;
+  top: 12px;
+  width: 30px;
+  height: 30px;
+  background: url(../../assets/images/close.png);
+  background-size: 100% 100%;
 }
 
 .submitBox {
+  padding: 10px;
+  border-top: 1px solid #ccc;
   position: fixed;
   bottom: 0;
-  z-index: 4000;
-  width: 100%;
+  width: -webkit-fill-available;
+  background: #fff;
 }
 
 .submitBox input {
   width: 100%;
 }
-.toggle{
+
+.toggle {
   position: relative;
 }
-.loading-box{
+
+.loading-box {
   text-align: center;
   position: absolute;
-  top:195px;
+  top: 195px;
   width: 100%;
 }
+
 .loading {
-    height: 42px;
-    width: 42px;
-    animation: loading-rotate 2s linear infinite;
+  height: 42px;
+  width: 42px;
+  animation: loading-rotate 2s linear infinite;
 }
+
 .loading-path {
-    animation: loading-dash 1.5s ease-in-out infinite;
-    stroke-dasharray: 90,150;
-    stroke-dashoffset: 0;
-    stroke-width: 2;
-    stroke: #409eff;
-    stroke-linecap: round;
+  animation: loading-dash 1.5s ease-in-out infinite;
+  stroke-dasharray: 90, 150;
+  stroke-dashoffset: 0;
+  stroke-width: 2;
+  stroke: #409eff;
+  stroke-linecap: round;
+}
+
+.panel-title {
+  font-size: 16px;
+  margin-bottom: 10px;
+  color: #333;
+  height: 16px;
+}
+
+.panel-p {
+  color: #a1a1a1;
+  font-size: 14px;
+  height: 14px;
+  margin-bottom: 10px;
+}
+
+>>>.el-input__inner {
+  line-height: 18px;
+}
+
+>>>.el-checkbox__inner {
+  border-radius: 50px;
+}
+
+>>>.el-button {
+  width: 100%;
 }
 </style>
