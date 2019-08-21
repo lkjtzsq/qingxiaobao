@@ -59,7 +59,7 @@
       </el-tab-pane>
     </el-tabs>
   </div>
-  <div class="timePanel" v-show="show" @touchmove.stop>
+  <div class="timePanel" v-if="show">
     <div class="timeHead">
       <i class="close" @click="show=!show"></i>
       <h1 class="panel-title">{{name}}</h1>
@@ -69,9 +69,9 @@
         <el-input v-model="theme" placeholder="请输入会议主题" resize="none"></el-input>
       </p>
     </div>
-    <div class="timeBox" ref="timeBox">
-      <div class="tbList">
-        <div class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
+    <div class="timeBox" ref="picWrapper">
+      <ul class="tbList" ref="picList">
+        <li class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
           <el-checkbox v-model="item.checked" :disabled="item.chose!='0'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">
             <p>
               {{selectableRange[index]}}
@@ -81,8 +81,8 @@
           </el-checkbox>
           <span></span>
           <span></span>
-        </div>
-      </div>
+        </li>
+      </ul>
     </div>
     <div class="submitBox">
       <el-button type="primary" disabled>立即预定</el-button>
@@ -97,7 +97,7 @@
 
 <script>
 import $ from 'jquery'
-import BScroll from 'better-scroll'
+import BScroll from '@better-scroll/core'
 export default {
   data() {
     return {
@@ -165,13 +165,9 @@ export default {
     this.currentDate()
     this.getList()
   },
-  mounted() {
-    this.$nextTick(() => {
-      this.scroll = new BScroll(this.$refs.timeBox)
-    })
-  },
   watch: {
     checked(val) {
+      alert(1)
       if (val == true) {
         console.log(val)
         this.timeList.forEach((item, index) => {
@@ -181,6 +177,12 @@ export default {
         })
         this.checked = false
       }
+    },
+    timeList(val) {
+      this.$nextTick(() => {
+        this._initPics();
+      });
+      console.log(val)
     },
     bgShow(val) {
       if (val == true) {
@@ -259,14 +261,21 @@ export default {
     quitChose(index) {
       let that = this
       if (index == this.startIndex) {
-        this.startIndex += 1
+        if(this.startIndex==this.endIndex){
+          this.startIndex=null
+          this.endIndex=null
+        }else{
+          this.startIndex += 1
+        }
       } else if (index == this.endIndex) {
         this.endIndex -= 1
+      } else if (this.startIndex == this.endIndex && this.startIndex == this.index) {
+        alert(1)
       }
+      console.log(this.startIndex)
+      console.log(this.endIndex)
       let step = Math.ceil((this.endIndex - this.startIndex) / 2)
-      console.log(step)
       if (index < step + this.startIndex) {
-
         this.timeList.some((item, dot) => {
           if (dot >= that.startIndex && dot < index) {
             this.timeList[dot].checked = false;
@@ -330,7 +339,6 @@ export default {
         }
 
       })
-
     },
     getList() {
       let that = this
@@ -372,6 +380,13 @@ export default {
     toFix2(val) {
       let newVal = String(val).length > 1 ? val : ('0' + val)
       return newVal
+    },
+    _initPics() {
+      let picScroll = new BScroll(this.$refs.picWrapper, {
+        scrollY: true,
+        click: true,
+        probeType: 3 // listening scroll hook
+      })
     }
   }
 }
@@ -394,14 +409,21 @@ export default {
 
 .meeting-item {
   margin-bottom: 10px;
-  overflow-y: scroll;
   background: #fff;
   padding: 12px;
 }
 
 .timeBox {
-  height: -webkit-fill-available;
   overflow: hidden;
+  height: -webkit-fill-available;
+}
+
+.tbList li {
+  position: relative;
+  height: 50px;
+  line-height: 50px;
+  padding: 0px 12px;
+  border-bottom: 1px solid #dcdfe6;
 }
 
 .txt-center {
@@ -808,9 +830,41 @@ export default {
 
 >>>.el-checkbox__inner {
   border-radius: 50px;
+  width: 16px;
+  height: 16px;
 }
 
 >>>.el-button {
+  width: 100%;
+}
+
+>>>.el-checkbox__label {
+  padding-left: 3px;
+}
+
+>>>.el-checkbox__label {
+  font-size: 16px;
+}
+
+>>>.el-checkbox__label i {
+  font-weight: normal;
+  position: absolute;
+  line-height: 50px;
+  right: 12px;
+  top: 0;
+}
+
+>>>.el-checkbox__inner::after {
+  left: 5px;
+  top: 2px;
+}
+
+>>>.el-checkbox,
+.el-checkbox__input {
+  position: initial;
+}
+
+>>>.el-checkbox {
   width: 100%;
 }
 </style>
