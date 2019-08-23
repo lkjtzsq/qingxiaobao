@@ -3,7 +3,7 @@
   <div class="topp">
     <span class="topp-back" @click="$router.push('/main')"></span>
     <div class="topp-title">会议室预约</div>
-    <span class="mine"></span>
+    <router-link to="/mine"><span class="mine"></span></router-link>
   </div>
   <div class="block">
     <el-date-picker v-model="value1" type="date" placeholder="选择日期" :picker-options="pickerOptions" :editable="false" :clearable="false" value-format="yyyy-MM-dd" @focus="dateFocus()" @change="dateChange()" :validate-event="false" @touchmove.stop>
@@ -17,7 +17,7 @@
     </div>
     <el-tabs v-model="activeName" @tab-click="handleClick" :stretch="true">
       <el-tab-pane label="东湖" name="first">
-        <div class="meeting-item" v-for="item in dongHuList" :dataId="item.id" @click="openTime(item.books,item.name,item.devices,item.pnumber)">
+        <div class="meeting-item" v-for="item in dongHuList" :dataId="item.id" @click="openTime(item.books,item.name,item.devices,item.pnumber,item.address,item.id)">
           <div class="meeting-room">
             <div class="meeting-left">
               <h1 class="meeting-title">{{item.name}}</h1>
@@ -37,15 +37,14 @@
         </div>
       </el-tab-pane>
       <el-tab-pane label="西海" name="second">
-        <div class="meeting-item" v-for="item in xiHaiList" :dataId="item.id" @click="openTime(item.books,item.name,item.devices,item.pnumber)">
+        <div class="meeting-item" v-for="item in xiHaiList" :dataId="item.id" @click="openTime(item.books,item.name,item.devices,item.pnumber,item.address,item.id)">
           <div class="meeting-room">
             <div class="meeting-left">
               <h1 class="meeting-title">{{item.name}}</h1>
               <p class="meeting-cr p1">{{item.devices}}</p>
-              <p class="meeting-cr p2">{{item.pnumber}}人</p>
-              <p class="meeting-cr p3">{{item.address}}</p>
+              <p class="meeting-cr p2"><span class="pnumber">{{item.pnumber}}</span>人<span class="address">{{item.address}}</span></p>
             </div>
-            <div class="meeting-right"><img :src="item.thumbnail[0]"></div>
+            <div class="meeting-right"><img :src="item.thumbnail[0]" @click.stop="slideImageShow=!slideImageShow;slideImage=item.thumbnail[0]"></div>
           </div>
           <div class="meeting-progress">
             <div class="progress-bar">
@@ -64,7 +63,7 @@
       <i class="close" @click="show=!show"></i>
       <h1 class="panel-title">{{name}}</h1>
       <p class="panel-p">{{devices}}</p>
-      <p class="panel-p">最多容纳{{pnumber}}人</p>
+      <p class="panel-p"><span class="pnumber">{{pnumber}}</span>人<span class="address">{{address}}</span></p>
       <p class="panel-input">
         <el-input v-model="theme" placeholder="请输入会议主题" resize="none"></el-input>
       </p>
@@ -85,7 +84,7 @@
       </ul>
     </div>
     <div class="submitBox">
-      <el-button type="primary" disabled>立即预定</el-button>
+      <el-button type="primary" :disabled="disable" @click="submitMeeting()">立即预定</el-button>
     </div>
   </div>
   <div class="datePickerBg" v-if="bgShow" @click="bgShow=!bgShow" @touchmove.prevent.stop></div>
@@ -101,13 +100,16 @@ import BScroll from '@better-scroll/core'
 export default {
   data() {
     return {
-      theme: "",
+      theme: "会议",
+      mid: null,
+      btnDisabled: true,
       loadingShow: true,
       slideImage: "",
       slideImageShow: false,
       name: "",
       devices: "",
       pnumber: "",
+      address: "",
       startIndex: null,
       endIndex: null,
       bgShow: false,
@@ -167,7 +169,6 @@ export default {
   },
   watch: {
     checked(val) {
-      alert(1)
       if (val == true) {
         console.log(val)
         this.timeList.forEach((item, index) => {
@@ -222,9 +223,41 @@ export default {
           return "gray"
         }
       }
+    },
+    disable() {
+      if (this.startIndex && this.endIndex && this.theme) {
+        return false
+      } else {
+        return true
+      }
     }
   },
   methods: {
+    submitMeeting() {
+      this.axios.post("/api/api/meeting/meeting_book", {
+        token: "29d216fab87b6eb6f0fe8fe18658b00f",
+        mid: this.mid,
+        date: this.value1,
+        start_p: this.startIndex,
+        end_p: this.endIndex,
+        theme: this.theme
+      }).then(data => {
+        if (data.data.msg == "请求成功") {
+          this.$notify({
+            title: '提示',
+            message: '预定成功',
+            type: 'success',
+            showClose: false,
+          });
+        } else {
+          this.$notify.error({
+            title: '提示',
+            message: data.data.msg,
+            showClose: false,
+          });
+        }
+      })
+    },
     dateFocus() {
       this.bgShow = !this.bgShow
     },
@@ -261,16 +294,14 @@ export default {
     quitChose(index) {
       let that = this
       if (index == this.startIndex) {
-        if(this.startIndex==this.endIndex){
-          this.startIndex=null
-          this.endIndex=null
-        }else{
+        if (this.startIndex == this.endIndex) {
+          this.startIndex = null
+          this.endIndex = null
+        } else {
           this.startIndex += 1
         }
       } else if (index == this.endIndex) {
         this.endIndex -= 1
-      } else if (this.startIndex == this.endIndex && this.startIndex == this.index) {
-        alert(1)
       }
       console.log(this.startIndex)
       console.log(this.endIndex)
@@ -302,13 +333,15 @@ export default {
         return false
       }
     },
-    openTime(books, name, devices, pnumber) {
+    openTime(books, name, devices, pnumber, address, id) {
       this.timeList = []
       let that = this
+      this.mid = id
       this.show = !this.show
       this.name = name
       this.devices = devices
       this.pnumber = pnumber
+      this.address = address
       books.forEach(function(item, index) {
         let outTime = ""
         if (that.outTime(index)) {
@@ -346,6 +379,7 @@ export default {
         date: this.value1,
         token: "29d216fab87b6eb6f0fe8fe18658b00f"
       }).then(data => {
+        console.log(data)
         data.data.data.data.forEach((item, index) => {
           item.books.forEach(function(v, i) {
             if (that.outTime(i)) {
@@ -385,7 +419,7 @@ export default {
       let picScroll = new BScroll(this.$refs.picWrapper, {
         scrollY: true,
         click: true,
-        probeType: 3 // listening scroll hook
+        bounce: false
       })
     }
   }
@@ -422,7 +456,7 @@ export default {
   position: relative;
   height: 50px;
   line-height: 50px;
-  padding: 0px 12px;
+  padding: 0px 15px;
   border-bottom: 1px solid #dcdfe6;
 }
 
@@ -479,6 +513,7 @@ export default {
   font-size: 16px;
   margin-bottom: 10px;
   color: #333;
+  font-weight: bold;
 }
 
 .meeting-cr {
@@ -722,15 +757,15 @@ export default {
 }
 
 .pnumber {
-  padding-left: 16px;
-  background: url(../../assets/images/people.png) 0 0 no-repeat;
-  background-size: auto 14px;
+  padding-left: 15px;
+  background: url(../../assets/images/people.png) 0 center no-repeat;
+  background-size: auto 13px;
 }
 
 .address {
-  padding-left: 16px;
-  background: url(../../assets/images/position.png) 0 0 no-repeat;
-  background-size: auto 14px;
+  padding-left: 15px;
+  background: url(../../assets/images/position.png) 0 center no-repeat;
+  background-size: auto 13px;
   margin-left: 5px;
 }
 
@@ -756,7 +791,7 @@ export default {
   top: 0;
   z-index: 5000;
   background: #fff;
-  padding: 12px;
+  padding: 15px;
   border-bottom: 1px solid #dcdfe6;
   height: 114px;
 }
@@ -815,6 +850,7 @@ export default {
   margin-bottom: 10px;
   color: #333;
   height: 16px;
+  font-weight: bold;
 }
 
 .panel-p {
@@ -830,8 +866,8 @@ export default {
 
 >>>.el-checkbox__inner {
   border-radius: 50px;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 
 >>>.el-button {
@@ -850,13 +886,15 @@ export default {
   font-weight: normal;
   position: absolute;
   line-height: 50px;
-  right: 12px;
+  right: 15px;
   top: 0;
 }
 
 >>>.el-checkbox__inner::after {
   left: 5px;
-  top: 2px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
 }
 
 >>>.el-checkbox,
@@ -866,5 +904,9 @@ export default {
 
 >>>.el-checkbox {
   width: 100%;
+}
+
+>>>.panel-input .el-input__inner {
+  padding: 0 10px;
 }
 </style>

@@ -70,7 +70,7 @@ export default {
 
 .welcome {
   font-size: 16px;
-  color: #717171;
+  color: #d3a705;
   letter-spacing: 2px;
   font-family: simhei;
 }

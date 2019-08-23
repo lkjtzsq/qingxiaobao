@@ -5,12 +5,15 @@ import App from './App'
 import router from './router'
 import ElementUi from 'element-ui'
 import Axios from 'axios'
+import MintUi from 'mint-ui'
 import "@/assets/css/reset.css"
 import "@/assets/css/commen.css"
 import 'element-ui/lib/theme-chalk/index.css';
+import 'mint-ui/lib/style.css';
 Vue.config.productionTip = false
 Vue.prototype.axios=Axios
 Vue.use(ElementUi)
+Vue.use(MintUi)
 /* eslint-disable no-new */
 new Vue({
   el: '#app',
