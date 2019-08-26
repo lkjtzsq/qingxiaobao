@@ -17,40 +17,17 @@
       <mt-tab-container-item id="1">
         <div class="wrapper" ref="wrapper">
           <div class="item-contain" :style="{height:height+'px'}">
-            <div class="myItem">
-              <h1 class="title">第一会议室（21-02）</h1>
-              <p class="status">状态：已预订</p>
-              <p class="theme">主题：会议</p>
-              <p class="time">时间：2018-03-25 20:00-21:30</p>
-              <p class="address">地点：中青大厦21层</p>
+            <div class="myItem" v-for="(item,index) in list" :key="index">
+              <h1 class="title">{{item.name}}</h1>
+              <p class="status">状态：{{item.status}}</p>
+              <p class="theme">主题：{{item.theme}}</p>
+              <p class="time">时间：{{item.date}} {{item.start_time}}至{{item.end_time}}</p>
+              <p class="address">地点：{{item.address}}</p>
               <div style="height:5px;"></div>
               <div class="cancel-box">
-                <span class="cancel">取 消</span>
+                <span class="cancel" @click="deleteApply(item.id,item.cancelTxt)">{{item.cancelTxt}}</span>
               </div>
             </div>
-            <div class="myItem">
-              <h1 class="title">第一会议室（21-02）</h1>
-              <p class="status">状态：已预订</p>
-              <p class="theme">主题：会议</p>
-              <p class="time">时间：2018-03-25 20:00-21:30</p>
-              <p class="address">地点：中青大厦21层</p>
-              <div style="height:5px;"></div>
-              <div class="cancel-box">
-                <span class="cancel">取 消</span>
-              </div>
-            </div>
-            <div class="myItem">
-              <h1 class="title">第一会议室（21-02）</h1>
-              <p class="status">状态：已预订</p>
-              <p class="theme">主题：会议</p>
-              <p class="time">时间：2018-03-25 20:00-21:30</p>
-              <p class="address">地点：中青大厦21层</p>
-              <div style="height:5px;"></div>
-              <div class="cancel-box">
-                <span class="cancel">取 消</span>
-              </div>
-            </div>
-
           </div>
         </div>
       </mt-tab-container-item>
@@ -66,6 +43,10 @@
 </template>
 
 <script>
+import {
+  Toast,
+  MessageBox
+} from 'mint-ui'
 import BScroll from '@better-scroll/core'
 export default {
   name: "Mine",
@@ -73,17 +54,88 @@ export default {
     return {
       selected: "1",
       height: "",
-      margin:10,
-      itemH:208
+      margin: 10,
+      itemH: 208,
+      list: [],
+      timer:null
     }
   },
-  mounted() {
-    this.init()
+  created() {
+    this.getList()
+  },
+  watch: {
+    list(val) {
+      this.$nextTick(() => {
+        this.init();
+      });
+    }
   },
   methods: {
+    deleteApply(id, cancelTxt) {
+      let that=this
+      if(!this.timer){
+        this.timer=setTimeout(function(){
+          that.$confirm('此操作将' + cancelTxt + '预约, 是否继续?', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+            center: true
+          }).then((res) => {
+            if(res=="confirm"){
+              that.axios.post("/api/api/meeting/cancel_book",{
+                id:id,
+                "token":"29d216fab87b6eb6f0fe8fe18658b00f"
+              }).then(data=>{
+                console.log(data)
+                if(data.data.msg=="请求成功"){
+                  Toast(cancelTxt+"成功")
+                  that.getList()
+                }
+              })
+            }
+          }).catch(() => {});
+        },200)
+      }else{
+        clearTimeout(this.timer)
+        this.timer=null
+      }
+    },
+    getList() {
+      this.axios.post("/api/api/meeting/my_book", {
+        token: "29d216fab87b6eb6f0fe8fe18658b00f"
+      }).then(data => {
+        this.list = data.data.data.data
+        this.list.forEach((item, index) => {
+          let endTime = new Date(item.date.replace(/-/g, "/") + " " + item.end_time).getTime()
+          let currentTime = new Date().getTime()
+          if (endTime < currentTime) {
+            this.list[index].status = "已过期";
+            this.list[index].cancelTxt = "删除";
+          } else {
+            switch (this.list[index].status) {
+              case "-1":
+                this.list[index].status = "已结束";
+                break;
+              case "0":
+                this.list[index].status = "审核中";
+                break;
+              case "1":
+                this.list[index].status = "已预订";
+                break;
+              case "2":
+                this.list[index].status = "未通过";
+                break;
+              case "3":
+                this.list[index].status = "已撤销";
+                break;
+            }
+            this.list[index].cancelTxt = "取消";
+          }
+        })
+      })
+    },
     init() {
-
-      this.height=(this.itemH+this.margin)*3
+      this.height = (this.itemH + this.margin) * this.list.length
       let picScroll = new BScroll(this.$refs.wrapper, {
         scrollY: true,
         click: true,
@@ -102,9 +154,11 @@ export default {
 >>>.mint-tab-item {
   flex: auto;
 }
->>> .mint-tab-item-label{
+
+>>>.mint-tab-item-label {
   font-size: 14px;
 }
+
 .container {
   height: 100%;
   width: 100%;

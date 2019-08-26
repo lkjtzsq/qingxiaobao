@@ -37,3 +37,9 @@
   background-image: url(../../assets/images/mine-white.png);
   background-size: 100% 100%;
 }
+.el-message-box{
+  width: auto !important;
+}
+.mint-toast{
+  line-height: 20px;
+}

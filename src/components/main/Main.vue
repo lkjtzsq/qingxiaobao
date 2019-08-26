@@ -31,8 +31,10 @@
       <p>车位预约</p>
     </div>
     <div class="main-item">
+        <router-link to="/meeting">
       <img src="../../assets/images/mine.png" />
       <p>我的预约</p>
+      </router-link>
     </div>
   </div>
 </div>

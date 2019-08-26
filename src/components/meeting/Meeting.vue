@@ -96,6 +96,10 @@
 
 <script>
 import $ from 'jquery'
+import {
+  Toast,
+  MessageBox
+} from 'mint-ui'
 import BScroll from '@better-scroll/core'
 export default {
   data() {
@@ -243,18 +247,21 @@ export default {
         theme: this.theme
       }).then(data => {
         if (data.data.msg == "请求成功") {
-          this.$notify({
-            title: '提示',
-            message: '预定成功',
-            type: 'success',
-            showClose: false,
+          MessageBox.confirm('', {
+            title: "提示",
+            message: "预定成功!",
+            showCancelButton: false,
+            closeOnClickModal: false
+          }).then(action => {
+            if (action == "confirm") {
+              this.$router.push('/mine')
+            }
           });
         } else {
-          this.$notify.error({
-            title: '提示',
+          Toast({
             message: data.data.msg,
-            showClose: false,
-          });
+            iconClass: 'mint-toast-icon mintui mintui-error'
+          })
         }
       })
     },
@@ -334,6 +341,8 @@ export default {
       }
     },
     openTime(books, name, devices, pnumber, address, id) {
+      this.startIndex = null
+      this.endIndex = null
       this.timeList = []
       let that = this
       this.mid = id
@@ -427,13 +436,18 @@ export default {
 </script>
 <style scoped>
 .main {
-  padding-top: 46px;
+  padding-top: 146px;
   background: #f2f2f2;
 }
 
 .block {
   padding: 15px;
   background: #fff;
+  position: fixed;
+  width: 100%;
+  top: 46px;
+  z-index: 999;
+  box-sizing: border-box;
 }
 
 .el-date-editor.el-input,
@@ -908,5 +922,13 @@ export default {
 
 >>>.panel-input .el-input__inner {
   padding: 0 10px;
+}
+
+>>>.el-tabs__header {
+  top: 105px;
+  position: fixed;
+  width: 100%;
+  z-index: 999;
+  background: #fff;
 }
 </style>
