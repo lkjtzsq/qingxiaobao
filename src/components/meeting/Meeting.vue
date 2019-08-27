@@ -58,39 +58,43 @@
       </el-tab-pane>
     </el-tabs>
   </div>
-  <div class="timePanel" v-if="show">
-    <div class="timeHead">
-      <i class="close" @click="show=!show"></i>
-      <h1 class="panel-title">{{name}}</h1>
-      <p class="panel-p">{{devices}}</p>
-      <p class="panel-p"><span class="pnumber">{{pnumber}}</span>人<span class="address">{{address}}</span></p>
-      <p class="panel-input">
-        <el-input v-model="theme" placeholder="请输入会议主题" resize="none"></el-input>
-      </p>
+  <transition enter-active-class="animated slideInUp">
+    <div class="timePanel" v-if="show">
+      <div class="timeHead">
+        <i class="close" @click="show=!show"></i>
+        <h1 class="panel-title">{{name}}</h1>
+        <p class="panel-p">{{devices}}</p>
+        <p class="panel-p"><span class="pnumber">{{pnumber}}</span>人<span class="address">{{address}}</span></p>
+        <p class="panel-input">
+          <el-input v-model="theme" placeholder="请输入会议主题" resize="none"></el-input>
+        </p>
+      </div>
+      <div class="timeBox" ref="picWrapper">
+        <ul class="tbList" ref="picList">
+          <li class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
+            <el-checkbox v-model="item.checked" :disabled="item.chose!='0'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">
+              <p>
+                {{selectableRange[index]}}
+                <i v-if="item.outTime">已过期</i>
+                <i v-if="!item.outTime && item.chose!=0">已被{{item.chose}}预定</i>
+              </p>
+            </el-checkbox>
+            <span></span>
+            <span></span>
+          </li>
+        </ul>
+      </div>
+      <div class="submitBox">
+        <el-button type="primary" :disabled="disable" @click="submitMeeting()">立即预定</el-button>
+      </div>
     </div>
-    <div class="timeBox" ref="picWrapper">
-      <ul class="tbList" ref="picList">
-        <li class="timeItem" v-for="(item,index) in timeList" :id="'t'+(index+1)">
-          <el-checkbox v-model="item.checked" :disabled="item.chose!='0'?true:false" @change="item.checked && chose(index);!item.checked && quitChose(index)">
-            <p>
-              {{selectableRange[index]}}
-              <i v-if="item.outTime">已过期</i>
-              <i v-if="!item.outTime && item.chose!=0">已被{{item.chose}}预定</i>
-            </p>
-          </el-checkbox>
-          <span></span>
-          <span></span>
-        </li>
-      </ul>
-    </div>
-    <div class="submitBox">
-      <el-button type="primary" :disabled="disable" @click="submitMeeting()">立即预定</el-button>
-    </div>
-  </div>
+  </transition>
   <div class="datePickerBg" v-if="bgShow" @click="bgShow=!bgShow" @touchmove.prevent.stop></div>
-  <div class="slideImage" v-if="slideImageShow" @click="slideImageShow=!slideImageShow">
-    <img :src="slideImage" />
-  </div>
+  <transition enter-active-class="animated fadeIn">
+    <div class="slideImage" v-if="slideImageShow" @click="slideImageShow=!slideImageShow">
+      <img :src="slideImage" />
+    </div>
+  </transition>
 </div>
 </template>
 
@@ -239,7 +243,7 @@ export default {
   methods: {
     submitMeeting() {
       this.axios.post("/api/api/meeting/meeting_book", {
-        token: "29d216fab87b6eb6f0fe8fe18658b00f",
+        token: localStorage.getItem("token"),
         mid: this.mid,
         date: this.value1,
         start_p: this.startIndex,
@@ -386,7 +390,7 @@ export default {
       let that = this
       this.axios.post("/api/api/meeting", {
         date: this.value1,
-        token: "29d216fab87b6eb6f0fe8fe18658b00f"
+        token: localStorage.getItem("token")
       }).then(data => {
         console.log(data)
         data.data.data.data.forEach((item, index) => {
@@ -401,7 +405,7 @@ export default {
             this.xiHaiList.push(item)
           }
         })
-        // this.loadingShow=!this.loadingShow
+        this.loadingShow = !this.loadingShow
       })
     },
     handleClick(tab, event) {

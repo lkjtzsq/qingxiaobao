@@ -6,8 +6,10 @@ import router from './router'
 import ElementUi from 'element-ui'
 import Axios from 'axios'
 import MintUi from 'mint-ui'
+import store from './store'
 import "@/assets/css/reset.css"
 import "@/assets/css/commen.css"
+import "@/assets/css/animate.css"
 import 'element-ui/lib/theme-chalk/index.css';
 import 'mint-ui/lib/style.css';
 Vue.config.productionTip = false
@@ -18,6 +20,7 @@ Vue.use(MintUi)
 new Vue({
   el: '#app',
   router,
+  store,
   components: { App },
   template: '<App/>'
 })

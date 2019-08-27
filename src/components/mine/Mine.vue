@@ -15,6 +15,12 @@
     </div>
     <mt-tab-container v-model="selected">
       <mt-tab-container-item id="1">
+        <div class="no-list" v-if="noList">暂无预约</div>
+        <div class="loading-box" v-if="loadingShow">
+          <svg viewBox="25 25 50 50" class="loading">
+            <circle cx="50" cy="50" r="20" fill="none" class="loading-path"></circle>
+          </svg>
+        </div>
         <div class="wrapper" ref="wrapper">
           <div class="item-contain" :style="{height:height+'px'}">
             <div class="myItem" v-for="(item,index) in list" :key="index">
@@ -52,6 +58,8 @@ export default {
   name: "Mine",
   data() {
     return {
+      noList:false,
+      loadingShow:true,
       selected: "1",
       height: "",
       margin: 10,
@@ -73,36 +81,34 @@ export default {
   methods: {
     deleteApply(id, cancelTxt) {
       let that=this
-      if(!this.timer){
-        this.timer=setTimeout(function(){
-          that.$confirm('此操作将' + cancelTxt + '预约, 是否继续?', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'warning',
-            center: true
-          }).then((res) => {
-            if(res=="confirm"){
-              that.axios.post("/api/api/meeting/cancel_book",{
-                id:id,
-                "token":"29d216fab87b6eb6f0fe8fe18658b00f"
-              }).then(data=>{
-                console.log(data)
-                if(data.data.msg=="请求成功"){
-                  Toast(cancelTxt+"成功")
-                  that.getList()
-                }
-              })
-            }
-          }).catch(() => {});
-        },200)
-      }else{
+      if(this.timer!=null){
         clearTimeout(this.timer)
-        this.timer=null
       }
+      this.timer=setTimeout(function(){
+        that.$confirm('此操作将' + cancelTxt + '预约, 是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+          center: true
+        }).then((res) => {
+          if(res=="confirm"){
+            that.axios.post("/api/api/meeting/cancel_book",{
+              id:id,
+              "token":localStorage.getItem("token")
+            }).then(data=>{
+              console.log(data)
+              if(data.data.msg=="请求成功"){
+                Toast(cancelTxt+"成功")
+                that.getList()
+              }
+            })
+          }
+        }).catch(() => {});
+      },10)
     },
     getList() {
       this.axios.post("/api/api/meeting/my_book", {
-        token: "29d216fab87b6eb6f0fe8fe18658b00f"
+        token: localStorage.getItem("token")
       }).then(data => {
         this.list = data.data.data.data
         this.list.forEach((item, index) => {
@@ -132,6 +138,10 @@ export default {
             this.list[index].cancelTxt = "取消";
           }
         })
+        this.loadingShow=false
+        if(!this.list.length){
+          this.noList=true
+        }
       })
     },
     init() {
@@ -218,5 +228,32 @@ export default {
 .cancel {
   color: #26a2ff;
   font-size: 14px;
+  letter-spacing: 5px;
+}
+.loading-box {
+  text-align: center;
+  position: absolute;
+  top: 195px;
+  width: 100%;
+}
+.loading {
+  height: 42px;
+  width: 42px;
+  animation: loading-rotate 2s linear infinite;
+}
+
+.loading-path {
+  animation: loading-dash 1.5s ease-in-out infinite;
+  stroke-dasharray: 90, 150;
+  stroke-dashoffset: 0;
+  stroke-width: 2;
+  stroke: #409eff;
+  stroke-linecap: round;
+}
+.no-list{
+  text-align: center;
+padding-top: 50px;
+color: #999;
+font-size: 14px;
 }
 </style>

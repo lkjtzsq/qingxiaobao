@@ -6,7 +6,7 @@
   <div class="logo-txt">
     <img src="../../assets/images/main-txt.png" />
   </div>
-  <p class="welcome">欢迎张少强</p>
+  <p class="welcome">欢迎{{uname}}</p>
   <div class="main-box">
     <div class="main-item">
       <router-link to="/meeting">
@@ -31,7 +31,7 @@
       <p>车位预约</p>
     </div>
     <div class="main-item">
-        <router-link to="/meeting">
+        <router-link to="/mine">
       <img src="../../assets/images/mine.png" />
       <p>我的预约</p>
       </router-link>
@@ -45,7 +45,31 @@ export default {
   name: "Main",
   data() {
     return {
-
+      uname:""
+    }
+  },
+  created(){
+    this.getToken()
+  },
+  methods:{
+    getToken(){
+      let wx_id=this.$route.query.wx_open_id
+      if(wx_id){
+        this.axios.post("/api/api/get_token",{
+          wx_open_id:wx_id
+        }).then(data=>{
+          if(data.data.data.token){
+            this.uname=data.data.data.name
+          }else{
+            this.$router.push({
+              path:'/login',
+              query:{
+                wx_open_id:this.$route.query.wx_open_id
+              }
+            })
+          }
+        })
+      }
     }
   }
 }

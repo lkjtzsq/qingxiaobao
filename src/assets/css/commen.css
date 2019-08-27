@@ -37,9 +37,25 @@
   background-image: url(../../assets/images/mine-white.png);
   background-size: 100% 100%;
 }
-.el-message-box{
-  width: auto !important;
+
+.el-message-box {
+  width: 70% !important;
 }
-.mint-toast{
+
+.mint-toast {
   line-height: 20px;
+}
+
+.el-message-box__btns button:nth-child(2) {
+  margin-left: 30px !important;
+}
+
+.mint-msgbox-btns {
+  height: 45px;
+  line-height: 45px;
+}
+
+.mint-msgbox-confirm {
+  font-size: 16px;
+  letter-spacing: 5px;
 }
