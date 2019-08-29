@@ -242,7 +242,7 @@ export default {
   },
   methods: {
     submitMeeting() {
-      this.axios.post("/api/api/meeting/meeting_book", {
+      this.axios.post(this.$store.state.domain+"api/meeting/meeting_book", {
         token: localStorage.getItem("token"),
         mid: this.mid,
         date: this.value1,
@@ -388,7 +388,7 @@ export default {
     },
     getList() {
       let that = this
-      this.axios.post("/api/api/meeting", {
+      this.axios.post(this.$store.state.domain+"api/meeting", {
         date: this.value1,
         token: localStorage.getItem("token")
       }).then(data => {

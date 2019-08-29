@@ -92,7 +92,8 @@ export default {
           center: true
         }).then((res) => {
           if(res=="confirm"){
-            that.axios.post("/api/api/meeting/cancel_book",{
+            console.log(1)
+            that.axios.post(that.$store.state.domain+"api/meeting/cancel_book",{
               id:id,
               "token":localStorage.getItem("token")
             }).then(data=>{
@@ -107,7 +108,7 @@ export default {
       },10)
     },
     getList() {
-      this.axios.post("/api/api/meeting/my_book", {
+      this.axios.post(this.$store.state.domain+"api/meeting/my_book", {
         token: localStorage.getItem("token")
       }).then(data => {
         this.list = data.data.data.data

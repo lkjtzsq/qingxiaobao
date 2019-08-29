@@ -4,6 +4,8 @@ Vue.use(Vuex)
 // Vue.use(axios)
 const store = new Vuex.Store({
   state:{
+    // domain:"/api/",
+    domain:"http://qxbyd.cyol.com/"
   },
   mutations:{
     inputFocusOut(state){

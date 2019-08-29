@@ -69,7 +69,7 @@ export default {
           duration: 2000
         });
       } else {
-        this.axios.post("/api/api/register", {
+        this.axios.post(this.$store.state.domain+"api/register", {
           name: this.uname,
           telephone: this.telephone,
           code: this.captcha,
@@ -102,7 +102,7 @@ export default {
       }
     },
     getCompany() {
-      this.axios.get("/api/api/get_company").then(data => {
+      this.axios.get(this.$store.state.domain+"api/get_company").then(data => {
         console.log(data)
         for (var index in data.data.data) {
           this.companys.push(data.data.data[index])
@@ -125,7 +125,7 @@ export default {
       }
     },
     codeTimer() {
-      this.axios.post("/api/api/send_sms", {
+      this.axios.post(this.$store.state.domain+"api/send_sms", {
         telephone: this.telephone
       }).then(data => {
         console.log(data)
@@ -221,6 +221,7 @@ export default {
 .mselect {
   width: 100%;
   height: 48px;
+  background: none;
   -webkit-appearance: none;
   border: none;
   border-bottom: 1px solid #d9d9d9;

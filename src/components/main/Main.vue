@@ -6,7 +6,7 @@
   <div class="logo-txt">
     <img src="../../assets/images/main-txt.png" />
   </div>
-  <p class="welcome">欢迎{{uname}}</p>
+  <p class="welcome">欢迎{{name}}</p>
   <div class="main-box">
     <div class="main-item">
       <router-link to="/meeting">
@@ -45,31 +45,7 @@ export default {
   name: "Main",
   data() {
     return {
-      uname:""
-    }
-  },
-  created(){
-    this.getToken()
-  },
-  methods:{
-    getToken(){
-      let wx_id=this.$route.query.wx_open_id
-      if(wx_id){
-        this.axios.post("/api/api/get_token",{
-          wx_open_id:wx_id
-        }).then(data=>{
-          if(data.data.data.token){
-            this.uname=data.data.data.name
-          }else{
-            this.$router.push({
-              path:'/login',
-              query:{
-                wx_open_id:this.$route.query.wx_open_id
-              }
-            })
-          }
-        })
-      }
+      name:localStorage.getItem("name")
     }
   }
 }
