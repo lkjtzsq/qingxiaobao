@@ -39,6 +39,12 @@ export default {
     this.getCompany()
   },
   methods: {
+    GetQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+      var r = window.location.search.substr(1).match(reg);
+      if (r != null) return decodeURI(r[2]);
+      return null;
+    },
     submit() {
       if (this.uname == "") {
         this.$toast({
@@ -75,7 +81,7 @@ export default {
           code: this.captcha,
           region: this.selected,
           duty: this.remarks,
-          wx_open_id: this.$route.query.wx_open_id
+          wx_open_id: this.GetQueryString("wx_open_id")
         }).then(data => {
           console.log(data)
           if (data.data.data.token) {
@@ -83,12 +89,14 @@ export default {
               message: "登录成功",
               iconClass: 'mint-toast-icon mintui mintui-success',
             });
-            this.$router.push({
-              path:'/main',
-              query:{
-                wx_open_id:this.$route.query.wx_open_id
-              }
-            })
+            // this.$router.push({
+            //   path:'/main',
+            //   query:{
+            //     wx_open_id:this.$route.query.wx_open_id
+            //   }
+            // })
+            localStorage.setItem("name",this.uname)
+            this.$router.push(`/main`)
             localStorage.setItem("token", data.data.data.token)
           }else{
             this.$toast({

@@ -21,35 +21,54 @@ export default {
     this.getToken()
   },
   methods: {
+    GetQueryString(name) {
+      var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+      var r = window.location.search.substr(1).match(reg);
+      if (r != null) return decodeURI(r[2]);
+      return null;
+    },
     getToken() {
-      let that=this
-      let wx_id = this.$route.query.wx_open_id
+      let that = this
+      // let wx_id = this.$route.query.wx_open_id
+      var wx_id = this.GetQueryString("wx_open_id");
       console.log(wx_id)
       if (wx_id) {
-        this.axios.post(this.$store.state.domain+"api/get_token", {
+        this.axios.post(this.$store.state.domain + "api/get_token", {
           wx_open_id: wx_id
         }).then(data => {
           console.log(data)
           if (data.data.data.token) {
-            localStorage.setItem("name",data.data.data.name)
-            localStorage.setItem("token",data.data.data.token)
+            localStorage.setItem("name", data.data.data.name)
+            localStorage.setItem("token", data.data.data.token)
           } else {
             clearTimeout(this.timer)
-            setTimeout(function(){
-              that.$router.push({
-                path: '/login',
-                query: {
-                  wx_open_id: that.$route.query.wx_open_id
-                }
-              })
-            },this.seconds*1000)
+            setTimeout(function() {
+              // that.$router.push({
+              //   path: '/login',
+              //   query: {
+              //     wx_open_id: that.$route.query.wx_open_id
+              //   }
+              // })
+              that.$router.push(`/login`)
+            }, this.seconds * 1000)
           }
         })
+      } else {
+        clearTimeout(this.timer)
+        setTimeout(function() {
+          // that.$router.push({
+          //   path: '/login',
+          //   query: {
+          //     wx_open_id: that.$route.query.wx_open_id
+          //   }
+          // })
+          that.$router.push(`/login`)
+        }, this.seconds * 1000)
       }
     },
     // 定时跳转
     toLogin() {
-      let _this = this
+      let that = this
       if (this.timer) {
         clearInterval(this.timer)
       }
@@ -58,12 +77,13 @@ export default {
           if (this.seconds == 0) {
             clearInterval(this.timer)
             setTimeout(() => {
-              _this.$router.push({
-                path: '/main',
-                query: {
-                  wx_open_id: this.$route.query.wx_open_id
-                }
-              })
+              // _this.$router.push({
+              //   path: '/main',
+              //   query: {
+              //     wx_open_id: this.$route.query.wx_open_id
+              //   }
+              // })
+              that.$router.push(`/main`)
             }, 1000)
           }
       }, 1000)

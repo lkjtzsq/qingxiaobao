@@ -9,7 +9,7 @@
   <p class="welcome">欢迎{{name}}</p>
   <div class="main-box">
     <div class="main-item">
-      <router-link to="/meeting">
+      <router-link :to="'/meeting?wx_open_id='+$route.query.wx_open_id">
         <img src="../../assets/images/meeting.png" />
         <p>会议室预约</p>
       </router-link>
@@ -31,9 +31,9 @@
       <p>车位预约</p>
     </div>
     <div class="main-item">
-        <router-link to="/mine">
-      <img src="../../assets/images/mine.png" />
-      <p>我的预约</p>
+      <router-link to="/mine">
+        <img src="../../assets/images/mine.png" />
+        <p>我的预约</p>
       </router-link>
     </div>
   </div>
@@ -45,8 +45,33 @@ export default {
   name: "Main",
   data() {
     return {
-      name:localStorage.getItem("name")
+      name: ""
     }
+  },
+  created() {
+    if (localStorage.getItem("name")) {
+      this.name = localStorage.getItem("name")
+    } else {
+      this.getToken()
+    }
+  },
+  methods: {
+    getToken() {
+      let wx_id = this.$route.query.wx_open_id
+      this.axios.post(this.$store.state.domain + "api/get_token", {
+        wx_open_id: wx_id
+      }).then(data => {
+        console.log(data)
+        if (data.data.data.token) {
+          this.name = data.data.data.name
+          localStorage.setItem("name", data.data.data.name)
+          localStorage.setItem("token", data.data.data.token)
+        } else {
+          this.$router.push(`/login`)
+        }
+      })
+    }
+
   }
 }
 </script>

@@ -1,7 +1,7 @@
 <template>
 <div class="main">
   <div class="topp">
-    <span class="topp-back" @click="$router.push('/main')"></span>
+    <span class="topp-back" @click="$router.go(-1)"></span>
     <div class="topp-title">会议室预约</div>
     <router-link to="/mine"><span class="mine"></span></router-link>
   </div>
@@ -174,6 +174,7 @@ export default {
   created() {
     this.currentDate()
     this.getList()
+    this.getToken()
   },
   watch: {
     checked(val) {
@@ -241,13 +242,18 @@ export default {
     }
   },
   methods: {
+    getToken() {
+      if (!localStorage.getItem("token")) {
+        this.$router.push(`/login?wx_open_id=${this.$route.query.wx_open_id}`)
+      }
+    },
     submitMeeting() {
-      this.axios.post(this.$store.state.domain+"api/meeting/meeting_book", {
+      this.axios.post(this.$store.state.domain + "api/meeting/meeting_book", {
         token: localStorage.getItem("token"),
         mid: this.mid,
         date: this.value1,
-        start_p: this.startIndex,
-        end_p: this.endIndex,
+        start_p: this.startIndex + 1,
+        end_p: this.endIndex + 1,
         theme: this.theme
       }).then(data => {
         if (data.data.msg == "请求成功") {
@@ -388,7 +394,7 @@ export default {
     },
     getList() {
       let that = this
-      this.axios.post(this.$store.state.domain+"api/meeting", {
+      this.axios.post(this.$store.state.domain + "api/meeting", {
         date: this.value1,
         token: localStorage.getItem("token")
       }).then(data => {

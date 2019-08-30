@@ -9,8 +9,7 @@ import Login from '@/components/login/Login.vue'
 Vue.use(Router)
 
 export default new Router({
-  routes: [
-    {
+  routes: [{
       path: '/',
       name: 'Home',
       component: Home
@@ -18,7 +17,10 @@ export default new Router({
     {
       path: '/main',
       name: 'Main',
-      component: Main
+      component: Main,
+      meta: {
+        keepAlive: true
+      }
     },
     {
       path: '/meeting',
@@ -33,7 +35,10 @@ export default new Router({
     {
       path: '/login',
       name: 'Login',
-      component: Login
+      component: Login,
+      meta:{
+        keepAlive:true
+      }
     }
   ]
 })
